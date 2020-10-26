@@ -333,4 +333,5 @@ int main()
     {
         cout << *it << endl;
     }
+    cout << "ok" <<endl;
 }
