@@ -117,5 +117,5 @@ int main()
     while (!fList.empty()) total += fList.removeAt(0);
     assert(expectedTest_14 == total);
     cout << "Completed! Weldone!\n";
-    system("pause");
+    //system("pause");
 }

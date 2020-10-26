@@ -599,7 +599,7 @@ string FragmentLinkedList<T>::toString()
 }
 
 #endif
-int main()
+/*int main()
 {
     clock_t start = clock();
     //TESTCASE INPUT
@@ -622,4 +622,4 @@ int main()
     printf("excute time: %.6fs\n", (double)(clock() - start) / 1000000);
     system("pause");
     // return 0;
-}
+}*/
