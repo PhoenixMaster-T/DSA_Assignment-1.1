@@ -138,7 +138,9 @@ public:
             }
             else // end
             {
-                if (fragmentIndex >= pList->getSizePointer() - 2)
+                if(fragmentIndex > pList->getSizePointer() -2)
+                    throw std::out_of_range("out_of_range");
+                else if (fragmentIndex == pList->getSizePointer() - 2)
                 {
                     pNode = NULL;
                     index = pList->size();
@@ -599,27 +601,32 @@ string FragmentLinkedList<T>::toString()
 }
 
 #endif
-/*int main()
+int main()
 {
     clock_t start = clock();
     //TESTCASE INPUT
     // == Example
-    FragmentLinkedList<int> fList(4);
-    for (int i = 0; i < 20; i++)
+    FragmentLinkedList<int> fList(100);
+    for (int i = 0; i < 100000; i++)
         fList.add(i);
-    for (FragmentLinkedList<int>::Iterator i = fList.begin(); i != fList.end(); i++)
-        cout << *i << " ";
+    //for (FragmentLinkedList<int>::Iterator i = fList.begin(); i != fList.end(); i++)
+    //    cout << *i << " ";
     cout << endl;
-    FragmentLinkedList<int>::Iterator it(2, &fList, true);
-    it.remove();
-    cout << fList.toString() << endl;
-    FragmentLinkedList<int>::Iterator it1(2, &fList, true);
+    FragmentLinkedList<int>::Iterator end = fList.begin(1);
+    for(FragmentLinkedList<int>::Iterator i1 = fList.begin(); i1 != end; i1++)
+    {
+        i1.remove();
+    }
+    fList.clear();
+    //cout << fList.toString() << endl;
+    //FragmentLinkedList<int>::Iterator it1(2, &fList, true);
     // === END: Example
     // END: TESTCASE INPUT
     //a.add(10,11);
     //FragmentLinkedList<int>::Node* begin = a.getFragment(1);
     //cout << "Info: ";
-    printf("excute time: %.6fs\n", (double)(clock() - start) / 1000000);
-    system("pause");
+    printf("excute time: %.6fs\n", (double)(clock() - start) / CLOCKS_PER_SEC);
+    //system("pause");
     // return 0;
-}*/
+    
+}
