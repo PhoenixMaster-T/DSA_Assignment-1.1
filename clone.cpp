@@ -1,337 +1,568 @@
-#include <iostream>
-#include <cassert>
 #include <sstream>
-
+#include <string>
+#include <iostream>
+#include <type_traits>
 using namespace std;
 
-class IntSLinkedList
+#ifndef ILIST_H
+#define ILIST_H
+
+template <class T>
+class IList
 {
 public:
-    class Iterator; //forward declaration
-    class Node;     //forward declaration
+    virtual void add(const T& element) = 0;
+    virtual void add(int index, const T& element) = 0;
+    virtual T removeAt(int index) = 0;
+    virtual bool removeItem(const T& item) = 0;
+    virtual bool empty() = 0;
+    virtual int size() = 0;
+    virtual void clear() = 0;
+    virtual T get(int index) = 0;
+    virtual void set(int index, const T& element) = 0;
+    virtual int indexOf(const T& item) = 0;
+    virtual bool contains(const T& item) = 0;
+    virtual string toString() = 0;
+};
+
+#endif
+
+// STUDENT ANSWER
+#ifndef FRAGMENT_LINKED_LIST
+#define FRAGMENT_LINKED_LIST
+template <class T>
+class FragmentLinkedList : IList<T>
+{
+public:
+    class Node;
+    class Iterator;
+
 protected:
-    Node *head;
-    Node *tail;
+    Node **fragmentPointers;
+    int fragmentMaxSize;
     int count;
 
 public:
-    IntSLinkedList()
+    FragmentLinkedList(int fragmentMaxSize = 5)
     {
-        head = NULL;
-        tail = NULL;
-        count = 0;
+        this->count = 0;
+        this->fragmentMaxSize = fragmentMaxSize;
+        this->fragmentPointers = new Node *[2];
+        this->fragmentPointers[0] = NULL;
+        this->fragmentPointers[1] = NULL;
     }
-    //IntSLinkedList() : head(NULL), tail(NULL), count(0){};
-    /*virtual ~IntSLinkedList()
+    virtual ~FragmentLinkedList()
     {
-        delete this->head;
-        delete this->tail;
-    }*/
-    virtual void add(int element)
+        delete[] * fragmentPointers;
+
+        delete fragmentPointers;
+        //
+        this->count = fragmentMaxSize = 0;
+    }
+
+
+
+    void thaydoisize() {
+        int NumElementFragment = (int)(this->count - 1) / fragmentMaxSize + 2; //VVVvvv
+
+        
+       
+        Node* head = fragmentPointers[0];
+        delete[] fragmentPointers;
+        if (head == NULL) {
+            this->fragmentPointers = new Node* [2];
+            
+            this->fragmentPointers[0] = NULL;
+
+            this->fragmentPointers[1] = NULL;
+            return;
+        }
+        this->fragmentPointers = new Node* [NumElementFragment];
+        fragmentPointers[0] = head; //
+        int i = 1;//
+        int countSize = 0;//
+        while (head->next != NULL)
+        {
+            head = head->next;//
+            countSize++;//
+            if (countSize == fragmentMaxSize) {//
+                fragmentPointers[i] = head;//
+                i++;//
+                countSize = 0;//
+            }
+        }
+
+        //cout << i << endl;
+        fragmentPointers[NumElementFragment - 1] = head;//
+    }
+
+
+
+    virtual void add(const T& element)
     {
-        Node *pNew = new Node(element);
-        if (this->count == 0)
-        {
-            this->tail = this->head = pNew;
-        }
-        else
-        {
-            this->tail->next = pNew;
-            this->tail = pNew;
-        }
+        Node* newnode = new Node( element, NULL, NULL);
         this->count++;
-    }
+        Node* mouse = fragmentPointers[0];
+        if (fragmentPointers[0] == NULL)
+        {
+           this->fragmentPointers[0] = newnode;
+           this->fragmentPointers[1] = newnode;
+            return;
 
-    virtual void add(int index, int element)
-    {
-        if (index < 0 || index > this->count)
-            throw out_of_range("Index is out of range");
-        else if (index == count)
-        {
-            this->add(element);
-        }
-        else if (index == 0)
-        {
-            Node *pNew = new Node(element);
-            pNew->next = this->head;
-            this->head = pNew;
-            this->count++;
         }
         else
         {
-            Node *pNew = new Node(element);
-            Node *temp = head;
-            int i = 0;
-            while (i < index - 1)
-            {
-                temp = temp->next;
-                i++;
-            }
-            pNew->next = temp->next;
-            temp->next = pNew;
-            this->count++;
+            while (mouse->next != NULL)
+                mouse = mouse->next;
         }
-    }
+        mouse->next = newnode;
+        newnode->prev = mouse;
+        //////////////////Resize Fragmen t LikedList:
+        thaydoisize();
 
-    virtual int removeAt(int index)
+    
+    }
+    virtual void add(int index, const T& element)
     {
-        Node *temp = this->head;
-        if (index < 0 || index >= this->count)
-            throw out_of_range("Index is out of range");
-        else if (index == 0)
-        {
-            this->head = temp->next;
-            temp->next = NULL;
-            this->count--;
-            return temp->data;
-        }
-        else
-        {
-            int i = 0;
-            Node *pre = head;
-            while (i < index - 1)
-            {
-                pre = pre->next;
-                i++;
-            }
-            if (index == this->count - 1)
-            {
-                temp = pre->next;
-                pre->next = NULL;
-                this->tail = pre;
-            }
-            else
-            {
-                temp = pre->next;
-                pre->next = temp->next;
-                temp->next = NULL;
-            }
-            this->count--;
-            return temp->data;
-        }
-        return 0;
-    }
+        Node* newnode = new Node(element, NULL, NULL);
+        this->count++; //
+        
+        if (index < 0)
+            throw std::out_of_range("The index is out of range!");
+        //them vao dau:
 
-    virtual bool removeItem(int item)
+        else if (index == 0) {
+            if (fragmentPointers[0] == NULL) {
+                fragmentPointers[0] = newnode;
+                fragmentPointers[1] = newnode;
+                return;
+            }
+            newnode->next = fragmentPointers[0];
+            fragmentPointers[0]->prev = newnode;
+            fragmentPointers[0] = newnode;
+
+        }
+        //them vao cuoi: 
+        else if (index >= this->size()) {//
+            Node* mtp = fragmentPointers[0];//
+            while (mtp->next != NULL)//
+                mtp = mtp->next;//
+            mtp->next = newnode;//
+            newnode->prev = mtp;//
+        }
+        //Add to index's position:
+        else {//
+            int i = 1;//
+            Node* prenode = fragmentPointers[0];//
+            Node* nextnode = NULL;//
+
+
+            while (i != index) {//
+                i++;//
+                prenode = prenode->next;//
+            }//
+            if (prenode->next == NULL) {//
+                this->add(element);//
+                this->count--;//
+                return;//
+            }
+            else {
+                nextnode = prenode->next;//
+                prenode->next = newnode;//
+
+                nextnode->prev = newnode;//
+                newnode->prev = prenode;//
+                newnode->next = nextnode; //
+            }
+        }
+        //Resize Fragment LikedList:
+        thaydoisize();
+    }
+    virtual T removeAt(int index)
     {
-        Node *temp = this->head;
-        float remove = 1.5;
-        int i = 0;
-        while (temp != NULL)
-        {
-            if (temp->data == item)
-            {
-                temp = temp->next;
-                remove = removeAt(i);
-                i--;
-            }
-            else
-                temp = temp->next;
-            i++;
+        Node* result = new Node(NULL, NULL);
+        //Remove Node://
+        if ((index < 0) || (index >= this->count))
+            throw std::out_of_range("The index is out of range!");
+        //Remove at head: //
+        else if (index == 0) {
+            this->count--;//
+            result->data = fragmentPointers[0]->data;//
+            Node* tmp = fragmentPointers[0];//
+            fragmentPointers[0] = fragmentPointers[0]->next;//
+            //fragmentPointers[0]->prev = nullptr;//
+            delete[] tmp;//
         }
-        if (remove != 1.5)
-            return true;
-        return false;
+        //xoa cuoi
+        else if (index >= (this->size() - 1)) { //
+            this->count--;//
+            Node* mtp = fragmentPointers[0];//
+            Node* mtp_pre = nullptr;//
+            while (mtp->next != nullptr) {//
+                mtp = mtp->next;
+            }
+            result->data = mtp->data;
+           mtp_pre = mtp->prev;
+            mtp->prev = NULL;
+            mtp_pre->next = NULL;
+            delete[] mtp;
+        }
+        //Remove at index: //
+        else {
+            this->count--; //
+            int i = 0;//
+            Node* currentnode = fragmentPointers[0];
+            Node* nextnode = NULL;
+            Node* prenode = NULL;
+            while (i != index) {
+                i++;
+                currentnode = currentnode->next;
+            }
+            //Delete at index position
+            result->data = currentnode->data;
+            nextnode = currentnode->next;
+            prenode = currentnode->prev;
+            nextnode->prev = prenode;
+            prenode->next = nextnode;
+            delete[] currentnode;
+        }
+        //Resize Fragment LikedList:
+        thaydoisize();
+        return result->data;
     }
-
+    virtual bool removeItem(const T& item)
+    {
+        Node* currentnode = fragmentPointers[0]; //
+        int index = 0;//
+        bool flag = false;//
+        while (currentnode != nullptr) { //ee
+            if (currentnode->data == item) { //ee
+                flag = true;//
+                break;//
+            }
+            index++;//
+            currentnode = currentnode->next; //ee
+        }
+        //Available to remove://ee
+        if (flag == 1) {//ee
+            this->count--;//ee
+            this->removeAt(index);//ee
+            // thay doi size//ee
+            thaydoisize();//ee
+        }
+        //Removed = 1 if not = 0:eee
+        return flag;
+    }
     virtual bool empty()
     {
-        if (this->head == NULL)
+        if (fragmentPointers[0] == NULL)
             return true;
-        return false;
+        return false; //
     }
-
     virtual int size()
     {
-        return this->count;
-        return 0;
+        return count;
     }
-
     virtual void clear()
     {
-        this->head = NULL;
-        this->count = 0;
-    }
+        Node* mtp = NULL; //z
+        Node* head = fragmentPointers[0];//z
 
-    virtual int get(int index)
+        while (head->next != NULL) {//z
+            mtp = head;//z
+            head = head->next;//z
+
+
+            head->prev = NULL;//z
+            delete[] mtp;//z
+        }
+        head = NULL;//z
+        delete[] head;//z
+        delete[] fragmentPointers;//
+
+        this->fragmentPointers = new Node* [2];//z
+        this->fragmentPointers[0] = NULL;//z
+        this->fragmentPointers[1] = NULL;//z
+    }
+    virtual T get(int index)
     {
-        int i = 0;
-        Node *temp = this->head;
-        if (index >= 0 && index < this->count)
-        {
-            while (i < index)
-            {
-                temp = temp->next;
-                i++;
+        if ((index < 0) || (index >= this->count))//b
+            throw std::out_of_range("The index is out of range!");//nn
+        else {//nn
+            Node* currentnode = fragmentPointers[0];//nn
+            int count = 0;//nn
+            while (currentnode != NULL) {//nn
+                if (count == index)//nn
+                    break;
+                count++;//v
+                currentnode = currentnode->next;// v
             }
-            return temp->data;
+            return currentnode->data;
+            //vvvvvvv
         }
-        return -1;
     }
-
-    virtual void set(int index, int element)
+    virtual void set(int index, const T& element)
     {
-        Node *temp = this->head;
-        int i = 0;
-        while (i < index)
-        {
-            temp = temp->next;
-            i++;
+        if ((index < 0) || (index >= this->count))
+            return;//mm
+        else {//
+            Node* currentnode = fragmentPointers[0];//mm
+            int count = 0;//
+
+            while  (currentnode != nullptr) 
+             {//mm
+
+                if (count == index)//mm
+                    break;//mm
+
+
+                count++;//mm
+                currentnode   = currentnode->next;//mm
+            }//m
+            currentnode->data = element;//mm
         }
-        temp->data = element;
+    }
+    virtual int indexOf(const T& item)
+    {
+        Node* currentnode = fragmentPointers[0];//jj
+        int index = 0;//jj
+        while (currentnode != NULL) {//jj
+            if (currentnode->data == item)//jj
+                return index;//jj
+            index++;//jj
+            currentnode = currentnode->next;//jj
+        }//jj
+        return -1; //jj
+    }
+    virtual bool contains(const T& item)
+    {
+        Node* currentnode = fragmentPointers[0];//
+        while (currentnode != NULL) {//
+            if (currentnode->data == item)//
+                return true;//
+            currentnode = currentnode->next;//
+        }//
+        return false; //
     }
 
-    virtual int indexOf(int item)
+    virtual string toString();
+
+
+    Iterator begin(int index = 0)
     {
-        Node *temp = this->head;
-        int i = 0;
-        while (temp != NULL)
-        {
-            if (temp->data == item)
-            {
-                return i;
-            }
-            temp = temp->next;
-            i++;
+        if (index == 0) {
+            Iterator FirstElement(this, true);// //
+
+            return FirstElement;//
+
+
         }
-        return -1;
-    }
-
-    virtual bool contains(int item)
-    {
-        if (indexOf(item) != -1)
-            return true;
-        return false;
-    }
-
-    virtual string toString()
-    {
-        stringstream ss;
-        ss << "[";
-        Node *ptr = head;
-        while (ptr != tail)
-        {
-            ss << ptr->data << ",";
-            ptr = ptr->next;
+        else {
+            Iterator FirstElement(index, this, true);  // 
+            return FirstElement;
         }
-
-        if (count > 0)
-            ss << ptr->data << "]";
-        else
-            ss << "]";
-        return ss.str();
     }
-
-    //virtual void dump();
-    IntSLinkedList(const IntSLinkedList &list)
+    Iterator end(int index = -1)
     {
-        this->count = 0;
-        this->head = NULL;
-        this->tail = NULL;
-    }
-    Iterator begin()
-    {
-        return Iterator(this, true);
-    }
-    Iterator end()
-    {
-        return Iterator(this, false);
-    }
+        if (index == -1) {
+            Iterator thelast(this, false);
+            return thelast;
+        }
+        else {
+            Iterator thelast(this, index, false);
+            return thelast;
+        }
+    } 
 
 public:
     class Node
     {
     private:
-        int data;
-        Node *next;
-        friend class IntSLinkedList;
+        T data;
+           Node *next;
+         Node *prev;
+        friend class FragmentLinkedList<T>;
 
     public:
         Node()
         {
-            next = 0;
+             next = 0;
+             prev = 0;
         }
-        Node(Node *next)
+        Node(Node *next, Node *prev)
         {
-            this->next = next;
+             this->next = next;
+             this->prev = prev;
         }
-        Node(int data, Node *next = NULL)
+        Node(T data, Node *next, Node *prev)
         {
-            this->data = data;
-            this->next = next;
+             this->data = data;
+             this->next = next;
+             this->prev = prev;
         }
     };
-    ////////////////////////////////////////////////////////////////////
+
     class Iterator
     {
     private:
-        IntSLinkedList *pList;
-        Node *current;
+        FragmentLinkedList<T> *pList;
+        Node *pNode;
+        int index;
 
     public:
-        Iterator(IntSLinkedList *pList = 0, bool begin = true)
-        {
-            this->pList = pList;
-            if (begin)
-            {
-                this->current = pList->head;
+         Iterator(FragmentLinkedList<T>* pList = 0, bool begin = true) 
+         {
+            this->pList = pList;  //nnnnn
+ 
+
+            //Return first element of list:  ....
+             pNode = pList->fragmentPointers[0]; 
+            
+            
+            //nnn
+
+            //Return last element of list: .......
+             if (begin == 0) 
+             { ///kkkk
+                if (pNode != NULL) //tttttt
+
+
+                    while (pNode->next != NULL)//kkkkkkk
+
+                        pNode = pNode->next;  //vvvvvvv 
+                else
+                    cout <<   this->pList->toString();//ffff
             }
-            else
-                pList->tail;
         }
-
-        Iterator &operator=(const Iterator &iterator)
+        Iterator(int fragmentIndex, FragmentLinkedList<T>* pList = 0, bool begin = true)
         {
-            this->pList = iterator.pList;
-            this->current = iterator.current;
+            this->pList = pList; //tttttt
+            //    Return first element of fragment ....
+
+
+            pNode = pList->fragmentPointers[fragmentIndex]; //uuuu
+            //  Return last element of fragment ....
+
+
+
+            int i = pList->fragmentMaxSize - 1; //b
+            if (!begin ) //bb
+
+
+            {
+                while ((pNode->next != NULL) && (i != 0)) //bbbb
+                {
+                    pNode = pNode->next; //gggg
+                    i--;
+                }
+            }
+        }
+        Iterator& operator=(const Iterator& iterator)
+
+
+
+        {
+
+
+
+            pList = iterator.pList; //c
+            pNode = iterator.pNode; //c
+
+
             return *this;
         }
-
-        void remove() {}
-
-        void set(const int &e) {}
-
-        int &operator*()
+        T& operator*()
         {
-            return this->current->data;
+            return pNode->data;
         }
-        bool operator!=(const Iterator &iterator)
+        bool operator!=(const Iterator& iterator)
         {
-            return this->current != iterator.current;
+            if (iterator.pNode == NULL) 
+
+
+                return (pNode != iterator.pNode); //gg
+            return (pNode != iterator.pNode->next); //gg
+
         }
-        // Prefix ++ overload
-        Iterator &operator++()
+        void remove()
         {
-            this->current = this->current->next;
-            return *this;
+            delete[] pNode;
+
+
+
+            delete[] pList;
+
+
         }
-        // Postfix ++ overload
+        void set(const T& element)
+        {
+            pNode->data = element; //gg
+        }
+        Iterator& operator++()
+        {
+            Iterator i(*this);
+
+            pNode = pNode->next; //gg
+
+
+            return i;
+        }
         Iterator operator++(int)
         {
-            Iterator operation = *this;
-            ++*this;
-            return operation;
+            pNode = pNode->next; //gg
+
+            return *this;
         }
     };
 };
+
+template <class T>
+string FragmentLinkedList<T>::toString()
+{
+    stringstream ss;
+    ss << "[";
+    Node *ptr = this->fragmentPointers[0];
+
+    if (this->count == 0)
+        ss << "]";
+
+    // TODO
+
+    while (ptr != NULL)
+    {
+        if (ptr->next == NULL)
+        {
+            ss << ptr->data << "]";
+            ptr = ptr->next;
+        }
+        else
+        {
+            ss << ptr->data << ", ";
+            ptr = ptr->next;
+        }
+    }
+
+    // END: TODO
+
+    return ss.str();
+}
+
+#endif
+// END: STUDENT ANSWER
+
 int main()
 {
-    IntSLinkedList list;
-    cout << "Build successfully" << endl;
-    assert(list.size() == 0);
-
-    int size = 10;
-    for (int idx = 0; idx < size; idx++)
-    {
-        list.add(idx);
-    }
-    assert(list.size() == 10);
-
-    IntSLinkedList::Iterator it;
-    int expvalue = 0;
-    for (it = list.begin(); it != list.end(); it++)
-    {
-        cout << *it << endl;
-    }
-    cout << "ok" <<endl;
+    FragmentLinkedList<int> fList(5);
+    for (int i = 0; i < 20; i++)
+        fList.add(i);
+    FragmentLinkedList<int>::Iterator a = fList.begin(2);
+    a++;
+    FragmentLinkedList<int>::Iterator b = a;
+    a++;
+    b.remove();
+    cout << fList.toString() << endl;
+    b++;
+    cout << "value of node pointed by a: " << *a << "\nvalue of node pointed by b: " << *b << endl;
+    cout << "So, a " << (!(a != b) ? "equal" : "not equal") << " b";
+    cout << endl;
 }

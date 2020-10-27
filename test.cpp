@@ -29,8 +29,8 @@ template <class T>
 class FragmentLinkedList : IList<T>
 {
 public:
-    class Iterator;
     class Node;
+    class Iterator;
 
 protected:
     Node **fragmentPointers;
@@ -44,7 +44,6 @@ protected:
     virtual void increaseFragmentPointer();
     virtual void decreaseFragmentPointer();
     virtual int getSizePointer();
-    virtual FragmentLinkedList<T>::Node *getFragment(int index);
 
 public:
     FragmentLinkedList(int fragmentMaxSize = 5)
@@ -64,8 +63,6 @@ public:
     virtual void add(int index, const T &element);
     virtual T removeAt(int index);
     virtual bool removeItem(const T &item);
-    Iterator begin(int index = 0);
-    Iterator end(int index = -1);
     virtual bool empty();
     virtual int size();
     virtual void clear();
@@ -74,6 +71,8 @@ public:
     virtual int indexOf(const T &item);
     virtual bool contains(const T &item);
     virtual string toString();
+    Iterator begin(int index = 0);
+    Iterator end(int index = -1);
 
 public:
     class Node
@@ -101,10 +100,6 @@ public:
             this->next = next;
             this->prev = prev;
         }
-        T getter()
-        {
-            return data;
-        }
     };
     class Iterator
     {
@@ -116,47 +111,67 @@ public:
     public:
         Iterator(FragmentLinkedList<T> *pList = 0, bool begin = true)
         {
-            this->pList = pList;
-            if (begin)
+            if (pList == NULL)
             {
-                pNode = pList->fragmentPointers[0];
-                index = 0;
+                this->pList = NULL;
+                this->pNode = NULL;
+                this->index = -1;
             }
             else
             {
-                pNode = NULL;
-                index = pList->size();
-            }
-        }
-        Iterator(int fragmentIndex, FragmentLinkedList<T> *pList = 0, bool begin = true)
-        {
-            this->pList = pList;
-            if (begin)
-            {
-                pNode = pList->fragmentPointers[fragmentIndex];
-                index = fragmentIndex * pList->fragmentMaxSize;
-            }
-            else // end
-            {
-                if(fragmentIndex > pList->getSizePointer() -2)
-                    throw std::out_of_range("out_of_range");
-                else if (fragmentIndex == pList->getSizePointer() - 2)
+                this->pList = pList;
+                if (begin)
+                {
+                    pNode = pList->fragmentPointers[0];
+                    index = 0;
+                }
+                else
                 {
                     pNode = NULL;
                     index = pList->size();
                 }
-                else
+            }
+        }
+        Iterator(int fragmentIndex, FragmentLinkedList<T> *pList = 0, bool begin = true)
+        {
+            if (pList == NULL)
+            {
+                this->pList = NULL;
+                this->pNode = NULL;
+                this->index = -1;
+            }
+            else
+            {
+                this->pList = pList;
+                if (begin)
                 {
-                    pNode = pList->fragmentPointers[fragmentIndex + 1];
-                    index = (fragmentIndex + 1) * pList->fragmentMaxSize;
+                    if (fragmentIndex > pList->getSizePointer() - 2)
+                        throw std::out_of_range("The index is out of range!");
+                    pNode = pList->fragmentPointers[fragmentIndex];
+                    index = fragmentIndex * pList->fragmentMaxSize;
+                }
+                else // end
+                {
+                    if (fragmentIndex > pList->getSizePointer() - 2)
+                        throw std::out_of_range("The index is out of range!");
+                    else if (fragmentIndex == pList->getSizePointer() - 2)
+                    {
+                        pNode = NULL;
+                        index = pList->size();
+                    }
+                    else
+                    {
+                        pNode = pList->fragmentPointers[fragmentIndex + 1];
+                        index = (fragmentIndex + 1) * pList->fragmentMaxSize;
+                    }
                 }
             }
         }
         Iterator &operator=(const Iterator &iterator)
         {
-            pNode = iterator->pNode;
-            index = iterator->index;
-            pList = iterator->pList;
+            this->pNode = iterator.pNode;
+            this->pList = iterator.pList;
+            this->index = iterator.index;
             return *this;
         }
         T &operator*()
@@ -230,6 +245,7 @@ public:
         }
     };
 };
+
 /*-----------------------------------------------------------------------------------------------------------------*/
 //Support functions. These fuctions can't be called in main() fuction.
 template <class T>
@@ -294,7 +310,7 @@ T FragmentLinkedList<T>::removeFirst()
     T res;
     if (count == 0)
     {
-        throw std::out_of_range("out of range");
+        throw std::out_of_range("The index is out of range!");
     }
     else
     {
@@ -323,7 +339,7 @@ T FragmentLinkedList<T>::removeLast()
     T res;
     if (count == 0)
     {
-        throw std::out_of_range("out of range");
+        throw std::out_of_range("Segmentation fault!");
     }
     else
     {
@@ -341,7 +357,9 @@ template <class T>
 typename FragmentLinkedList<T>::Node *FragmentLinkedList<T>::traverseTo(int index)
 {
     if (index < 0 || index >= count)
-        throw std::out_of_range("out of range");
+        throw std::out_of_range("The index is out of range!");
+    else if (count == 0)
+        throw std::out_of_range("Segmentation fault!");
     Node *res;
     int modIndex = index % fragmentMaxSize;
     if (modIndex < (fragmentMaxSize + 1) / 2)
@@ -373,11 +391,6 @@ int FragmentLinkedList<T>::getSizePointer()
     return sizePointer;
 }
 
-template <class T>
-typename FragmentLinkedList<T>::Node *FragmentLinkedList<T>::getFragment(int index)
-{
-    return fragmentPointers[index];
-}
 /*-------------------------------------------------------------------------------------------------------------------------------*/
 /*TODO: implement interface Ilist here*/
 template <class T>
@@ -408,7 +421,7 @@ void FragmentLinkedList<T>::add(int index, const T &element)
 {
     FragmentLinkedList::Node *newNode = new Node(element, NULL, NULL);
     if (index > count)
-        throw std::out_of_range("out of range");
+        throw std::out_of_range("The index is out of range!");
     else if (!index)
         addFirst(element);
     else if (index == count)
@@ -444,9 +457,9 @@ T FragmentLinkedList<T>::removeAt(int index)
 {
     T res;
     if (index < 0 || index >= count)
-        throw std::out_of_range("out of range");
+        throw std::out_of_range("The index is out of range!");
     else if (!count)
-        throw std::out_of_range("out of range");
+        throw std::out_of_range("Segmentation fault!");
     else if (count == 1)
     {
         res = fragmentPointers[0]->data;
@@ -553,15 +566,17 @@ template <class T>
 bool FragmentLinkedList<T>::contains(const T &item)
 {
     for (Node *k = this->fragmentPointers[0]; k != NULL; k = k->next)
+    {
         if (k->data == item)
             return true;
+    }  
     return false;
 }
 template <class T>
 typename FragmentLinkedList<T>::Iterator FragmentLinkedList<T>::begin(int indexFragment)
 {
     if (indexFragment >= sizePointer - 1)
-        throw std::out_of_range("out of range");
+        throw std::out_of_range("The index is out of range!");
     else
         return Iterator(indexFragment, this, true);
 }
@@ -571,7 +586,7 @@ typename FragmentLinkedList<T>::Iterator FragmentLinkedList<T>::end(int indexFra
     if (indexFragment == -1 || indexFragment == sizePointer - 2)
         return Iterator(this, false);
     else if (indexFragment >= sizePointer - 1)
-        throw std::out_of_range("out of range");
+        throw std::out_of_range("The index is out of range!");
     else
         return Iterator(indexFragment, this, false);
 }
@@ -604,29 +619,25 @@ string FragmentLinkedList<T>::toString()
 int main()
 {
     clock_t start = clock();
-    //TESTCASE INPUT
-    // == Example
-    FragmentLinkedList<int> fList(100);
+    cout << "check set, add and remove method:\n";
+    FragmentLinkedList<int> fList(5000);
     for (int i = 0; i < 100000; i++)
         fList.add(i);
-    //for (FragmentLinkedList<int>::Iterator i = fList.begin(); i != fList.end(); i++)
-    //    cout << *i << " ";
-    cout << endl;
-    FragmentLinkedList<int>::Iterator end = fList.begin(1);
-    for(FragmentLinkedList<int>::Iterator i1 = fList.begin(); i1 != end; i1++)
-    {
-        i1.remove();
-    }
-    fList.clear();
-    //cout << fList.toString() << endl;
-    //FragmentLinkedList<int>::Iterator it1(2, &fList, true);
-    // === END: Example
-    // END: TESTCASE INPUT
-    //a.add(10,11);
-    //FragmentLinkedList<int>::Node* begin = a.getFragment(1);
-    //cout << "Info: ";
+    fList.add(55555, -1);
+    cout << "current value at index 5555555: " << fList.get(55555) << endl;
+    fList.set(55555, -99);
+    cout << "current value at index 5555555: " << fList.get(55555) << endl;
+    fList.removeAt(55555);
+    cout << "current value at index 5555555: " << fList.get(55555) << endl;
+    FragmentLinkedList<int>::Iterator i = fList.begin();
+    FragmentLinkedList<int>::Iterator end = fList.end(0);
+    cout << "begin and end of fragment 0 (before): " << *i << " " << *end << endl;
+    for (; i != end; i++)
+        i.remove();
+    i = fList.begin();
+    cout << fList.contains(60000) <<endl;
+    end = fList.end(0);
+    cout << "begin and end of fragment 0 (after): " << *i << " " << *end << endl;
     printf("excute time: %.6fs\n", (double)(clock() - start) / CLOCKS_PER_SEC);
-    //system("pause");
-    // return 0;
-    
+    return 0;
 }
