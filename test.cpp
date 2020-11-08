@@ -624,11 +624,11 @@ int main()
     for (int i = 0; i < 100000; i++)
         fList.add(i);
     fList.add(55555, -1);
-    cout << "current value at index 5555555: " << fList.get(55555) << endl;
+    cout << "current value at index 555555: " << fList.get(5555) << endl;
     fList.set(55555, -99);
-    cout << "current value at index 5555555: " << fList.get(55555) << endl;
+    cout << "current value at index 555555: " << fList.get(5555) << endl;
     fList.removeAt(55555);
-    cout << "current value at index 5555555: " << fList.get(55555) << endl;
+    cout << "current value at index 555555: " << fList.get(5555) << endl;
     FragmentLinkedList<int>::Iterator i = fList.begin();
     FragmentLinkedList<int>::Iterator end = fList.end(0);
     cout << "begin and end of fragment 0 (before): " << *i << " " << *end << endl;
@@ -639,5 +639,6 @@ int main()
     end = fList.end(0);
     cout << "begin and end of fragment 0 (after): " << *i << " " << *end << endl;
     printf("excute time: %.6fs\n", (double)(clock() - start) / CLOCKS_PER_SEC);
+    system("pause");
     return 0;
 }
