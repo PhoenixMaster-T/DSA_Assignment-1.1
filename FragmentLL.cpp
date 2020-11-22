@@ -616,7 +616,7 @@ string FragmentLinkedList<T>::toString()
 }
 
 #endif
-int main()
+/*int main()
 {
     clock_t start = clock();
     cout << "check set, add and remove method:\n";
@@ -641,4 +641,4 @@ int main()
     printf("excute time: %.6fs\n", (double)(clock() - start) / CLOCKS_PER_SEC);
     system("pause");
     return 0;
-}
+}*/
